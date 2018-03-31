@@ -423,7 +423,7 @@ class KtLightAnnotationTest : KotlinLightCodeInsightFixtureTestCase() {
         }
         annotations[1].let { annotation ->
             val annotationAttributeVal = annotation.findAttributeValue("value") as PsiElement
-            assertTextAndRange("(\"1\")", annotationAttributeVal)
+            assertTextAndRange("\"1\"", annotationAttributeVal)
             annotationAttributeVal as PsiArrayInitializerMemberValue
             annotationAttributeVal.initializers[0].let { innerAnnotationAttributeVal ->
                 assertTextAndRange("\"1\"", innerAnnotationAttributeVal)
