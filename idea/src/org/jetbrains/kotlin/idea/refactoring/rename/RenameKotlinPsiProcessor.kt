@@ -59,7 +59,13 @@ abstract class RenameKotlinPsiProcessor : RenamePsiElementProcessor() {
         return references
     }
 
-    override fun getQualifiedNameAfterRename(element: PsiElement, newName: String, nonJava: Boolean): String? {
+    override fun getElementToSearchInStringsAndComments(element: PsiElement?): PsiElement? {
+        val unwrapped = element?.unwrapped ?: return null
+        if ((unwrapped is KtDeclaration) && KtPsiUtil.isLocal(unwrapped as KtDeclaration)) return null
+        return element
+    }
+
+    override fun getQualifiedNameAfterRename(element: PsiElement, newName: String?, nonJava: Boolean): String? {
         if (!nonJava) return newName
 
         val qualifiedName = when (element) {
