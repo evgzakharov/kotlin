@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.parsing.KotlinParserDefinition
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.script.KotlinScriptDefinition
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
 import org.jetbrains.kotlin.script.util.KotlinJars
 import java.io.File
 import java.net.URLClassLoader
@@ -236,7 +236,7 @@ internal class BridgeScriptDefinition(
     scriptCompilerConfiguration: ScriptCompileConfiguration,
     scriptConfigurator: ScriptCompilationConfigurator?,
     updateClasspath: (List<File>) -> Unit
-) : KotlinScriptDefinition(scriptCompilerConfiguration[ScriptingEnvironmentProperties.baseClass] as KClass<out Any>) {
+) : KotlinScriptDefinitionImpl(scriptCompilerConfiguration[ScriptingEnvironmentProperties.baseClass] as KClass<out Any>) {
     override val acceptedAnnotations =
         scriptCompilerConfiguration.getOrNull(ScriptCompileConfigurationProperties.refineConfigurationOnAnnotations)?.toList()
                 ?: emptyList()

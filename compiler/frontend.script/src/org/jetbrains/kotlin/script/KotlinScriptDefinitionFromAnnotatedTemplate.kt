@@ -40,7 +40,7 @@ open class KotlinScriptDefinitionFromAnnotatedTemplate(
         template: KClass<out Any>,
         val environment: Map<String, Any?>? = null,
         val templateClasspath: List<File> = emptyList()
-) : KotlinScriptDefinition(template) {
+) : KotlinScriptDefinitionImpl(template) {
     val scriptFilePattern by lazy {
         val pattern =
             takeUnlessError {

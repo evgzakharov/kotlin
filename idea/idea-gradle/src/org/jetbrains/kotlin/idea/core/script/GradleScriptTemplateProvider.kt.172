@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtScript
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromAnnotatedTemplate
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
 import org.jetbrains.plugins.gradle.config.GradleSettingsListenerAdapter
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionHelper
 import org.jetbrains.plugins.gradle.settings.DistributionType
@@ -227,7 +228,7 @@ class GradleScriptDefinitionsContributor(private val project: Project) : ScriptD
         ScriptDefinitionsManager.getInstance(project).reloadDefinitionsBy(this)
     }
 
-    private class ErrorGradleScriptDefinition(message: String? = null) : KotlinScriptDefinition(ScriptTemplateWithArgs::class) {
+    private class ErrorGradleScriptDefinition(message: String? = null) : KotlinScriptDefinitionImpl(ScriptTemplateWithArgs::class) {
         override val name: String = "Default Kotlin Gradle Script"
         override val fileType: LanguageFileType = KotlinFileType.INSTANCE
         override val annotationsForSamWithReceivers: List<String> = emptyList()

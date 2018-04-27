@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.idea.project.getLanguageVersionSettings
 import org.jetbrains.kotlin.idea.project.languageVersionSettings
 import org.jetbrains.kotlin.idea.project.targetPlatform
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
 
 object IDELanguageSettingsProvider : LanguageSettingsProvider {
     override fun getLanguageVersionSettings(moduleInfo: ModuleInfo, project: Project): LanguageVersionSettings =
@@ -77,15 +78,16 @@ private val LANGUAGE_VERSION_SETTINGS = Key.create<CachedValue<LanguageVersionSe
 
 private fun getVersionLanguageSettingsForScripts(project: Project, scriptDefinition: KotlinScriptDefinition): LanguageVersionSettings {
     val args = scriptDefinition.additionalCompilerArguments
-    return if (args == null || args.none()) {
+    val scriptDefImpl = scriptDefinition as? KotlinScriptDefinitionImpl
+    return if (args == null || args.none() || scriptDefImpl == null) {
         project.getLanguageVersionSettings()
     } else {
-        val settings = scriptDefinition.getUserData(LANGUAGE_VERSION_SETTINGS) ?: createCachedValue(project) {
+        val settings = scriptDefImpl.getUserData(LANGUAGE_VERSION_SETTINGS) ?: createCachedValue(project) {
             val compilerArguments = K2JVMCompilerArguments()
             parseCommandLineArguments(args.toList(), compilerArguments)
             // TODO: reporting
             compilerArguments.configureLanguageVersionSettings(MessageCollector.NONE)
-        }.also { scriptDefinition.putUserData(LANGUAGE_VERSION_SETTINGS, it) }
+        }.also { scriptDefImpl.putUserData(LANGUAGE_VERSION_SETTINGS, it) }
         settings.value
     }
 }

@@ -29,36 +29,54 @@ import kotlin.script.experimental.dependencies.DependenciesResolver
 import kotlin.script.experimental.location.ScriptExpectedLocation
 import kotlin.script.templates.standard.ScriptTemplateWithArgs
 
-open class KotlinScriptDefinition(val template: KClass<out Any>) : UserDataHolderBase() {
-
-    open val name: String = "Kotlin Script"
-
+interface KotlinScriptDefinition {
+    val template: KClass<out Any>
+    val name: String
     // TODO: consider creating separate type (subtype? for kotlin scripts)
-    open val fileType: LanguageFileType = KotlinFileType.INSTANCE
+    val fileType: LanguageFileType
+    val annotationsForSamWithReceivers: List<String>
 
-    open val annotationsForSamWithReceivers: List<String>
-        get() = emptyList()
-
-    open fun isScript(fileName: String): Boolean =
-        fileName.endsWith(KotlinParserDefinition.STD_SCRIPT_EXT)
-
-    open fun getScriptName(script: KtScript): Name =
-        NameUtils.getScriptNameForFile(script.containingKtFile.name)
-
-    open val dependencyResolver: DependenciesResolver get() = DependenciesResolver.NoDependencies
-
-    open val acceptedAnnotations: List<KClass<out Annotation>> get() = emptyList()
-
+    val dependencyResolver: DependenciesResolver
+    val acceptedAnnotations: List<KClass<out Annotation>>
     @Deprecated("temporary workaround for missing functionality, will be replaced by the new API soon")
-    open val additionalCompilerArguments: Iterable<String>? = null
-
-    open val scriptExpectedLocations: List<ScriptExpectedLocation> =
-        listOf(ScriptExpectedLocation.SourcesOnly, ScriptExpectedLocation.TestsOnly)
-
-    open val implicitReceivers: List<KType> get() = emptyList()
-
-    open val environmentVariables: List<Pair<String, KType>> get() = emptyList()
+    val additionalCompilerArguments: Iterable<String>?
+    val scriptExpectedLocations: List<ScriptExpectedLocation>
+    val implicitReceivers: List<KType>
+    val environmentVariables: List<Pair<String, KType>>
+    fun isScript(fileName: String): Boolean
+    fun getScriptName(script: KtScript): Name
 }
 
-object StandardScriptDefinition : KotlinScriptDefinition(ScriptTemplateWithArgs::class)
+open class KotlinScriptDefinitionImpl(override val template: KClass<out Any>) : KotlinScriptDefinition, UserDataHolderBase() {
+
+    override val name: String = "Kotlin Script"
+
+    // TODO: consider creating separate type (subtype? for kotlin scripts)
+    override val fileType: LanguageFileType = KotlinFileType.INSTANCE
+
+    override val annotationsForSamWithReceivers: List<String>
+        get() = emptyList()
+
+    override fun isScript(fileName: String): Boolean =
+        fileName.endsWith(KotlinParserDefinition.STD_SCRIPT_EXT)
+
+    override fun getScriptName(script: KtScript): Name =
+        NameUtils.getScriptNameForFile(script.containingKtFile.name)
+
+    override val dependencyResolver: DependenciesResolver get() = DependenciesResolver.NoDependencies
+
+    override val acceptedAnnotations: List<KClass<out Annotation>> get() = emptyList()
+
+    @Deprecated("temporary workaround for missing functionality, will be replaced by the new API soon")
+    override val additionalCompilerArguments: Iterable<String>? = null
+
+    override val scriptExpectedLocations: List<ScriptExpectedLocation> =
+        listOf(ScriptExpectedLocation.SourcesOnly, ScriptExpectedLocation.TestsOnly)
+
+    override val implicitReceivers: List<KType> get() = emptyList()
+
+    override val environmentVariables: List<Pair<String, KType>> get() = emptyList()
+}
+
+object StandardScriptDefinition : KotlinScriptDefinitionImpl(ScriptTemplateWithArgs::class)
 

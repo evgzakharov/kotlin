@@ -200,7 +200,7 @@ class StandardScriptDefinitionContributor(private val project: Project) : Script
 }
 
 
-class StandardIdeScriptDefinition(project: Project) : KotlinScriptDefinition(ScriptTemplateWithArgs::class) {
+class StandardIdeScriptDefinition(project: Project) : KotlinScriptDefinitionImpl(ScriptTemplateWithArgs::class) {
     override val dependencyResolver = BundledKotlinScriptDependenciesResolver(project)
 }
 

@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.NameUtils
 import org.jetbrains.kotlin.psi.KtScript
-import org.jetbrains.kotlin.script.KotlinScriptDefinition
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.script.experimental.api.ScriptCompileConfigurationProperties
@@ -21,7 +21,7 @@ import kotlin.script.experimental.dependencies.DependenciesResolver
 import kotlin.script.experimental.jvm.impl.BridgeDependenciesResolver
 
 class KotlinScriptDefinitionAdapterFromNewAPI(val scriptDefinition: ScriptDefinition) :
-    KotlinScriptDefinition(scriptDefinition.compilationConfigurator.defaultConfiguration[ScriptingEnvironmentProperties.baseClass]) {
+    KotlinScriptDefinitionImpl(scriptDefinition.compilationConfigurator.defaultConfiguration[ScriptingEnvironmentProperties.baseClass]) {
 
     override val name: String get() = scriptDefinition.properties.getOrNull(ScriptDefinitionProperties.name) ?: super.name
 
