@@ -2545,6 +2545,26 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
                 public void testWithAnnotation() throws Exception {
                     runTest("idea/testData/intentions/branched/ifWhen/ifToWhen/withAnnotation.kt");
                 }
+
+                @TestMetadata("withLoop.kt")
+                public void testWithLoop() throws Exception {
+                    runTest("idea/testData/intentions/branched/ifWhen/ifToWhen/withLoop.kt");
+                }
+
+                @TestMetadata("withLoopDeep.kt")
+                public void testWithLoopDeep() throws Exception {
+                    runTest("idea/testData/intentions/branched/ifWhen/ifToWhen/withLoopDeep.kt");
+                }
+
+                @TestMetadata("withLoopOriginal.kt")
+                public void testWithLoopOriginal() throws Exception {
+                    runTest("idea/testData/intentions/branched/ifWhen/ifToWhen/withLoopOriginal.kt");
+                }
+
+                @TestMetadata("withLoopThen.kt")
+                public void testWithLoopThen() throws Exception {
+                    runTest("idea/testData/intentions/branched/ifWhen/ifToWhen/withLoopThen.kt");
+                }
             }
 
             @TestMetadata("idea/testData/intentions/branched/ifWhen/whenToIf")

@@ -1,0 +1,12 @@
+fun test() {
+    // Loop comment
+    loop@ for (i in -2..2) {
+        // Some comment
+        // Very important comment
+        when {
+            i < 0 -> break@loop
+            else -> // More comments
+                i.hashCode()
+        }
+    }
+}

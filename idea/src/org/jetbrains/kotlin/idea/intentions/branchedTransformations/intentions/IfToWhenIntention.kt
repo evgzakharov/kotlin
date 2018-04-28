@@ -20,15 +20,18 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.idea.core.replaced
 import org.jetbrains.kotlin.idea.intentions.SelfTargetingRangeIntention
 import org.jetbrains.kotlin.idea.intentions.branchedTransformations.getSubjectToIntroduce
 import org.jetbrains.kotlin.idea.intentions.branchedTransformations.introduceSubject
 import org.jetbrains.kotlin.idea.intentions.branchedTransformations.unwrapBlockOrParenthesis
+import org.jetbrains.kotlin.idea.quickfix.AddLoopLabelFix
 import org.jetbrains.kotlin.idea.util.CommentSaver
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.PsiChildRange
 import org.jetbrains.kotlin.psi.psiUtil.getNextSiblingIgnoringWhitespaceAndComments
+import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.siblings
 import java.util.*
 
@@ -80,9 +83,56 @@ class IfToWhenIntention : SelfTargetingRangeIntention<KtIfExpression>(KtIfExpres
         return result
     }
 
-    private fun BuilderByPattern<*>.appendElseBlock(block: KtExpression?) {
+    private inner class LabelLoopJumpVisitor : KtVisitorVoid() {
+        var labelName: String? = null
+
+        private fun KtExpressionWithLabel.findLoopAndChooseLabel(): String? {
+            val loop = getStrictParentOfType<KtLoopExpression>() ?: return null
+            return AddLoopLabelFix.getUniqueLabelName(AddLoopLabelFix.collectUsedLabels(loop))
+        }
+
+        fun KtExpressionWithLabel.addLabelIfNecessary(): KtExpressionWithLabel {
+            if (this.getLabelName() != null) return this
+            if (labelName == null) {
+                labelName = this.findLoopAndChooseLabel()
+            }
+            if (labelName != null) {
+                val jumpWithLabel = KtPsiFactory(project).createExpression("$text@$labelName") as KtExpressionWithLabel
+                return replaced(jumpWithLabel)
+            }
+            return this
+        }
+
+        override fun visitBreakExpression(expression: KtBreakExpression) {
+            expression.addLabelIfNecessary()
+        }
+
+        override fun visitContinueExpression(expression: KtContinueExpression) {
+            expression.addLabelIfNecessary()
+        }
+
+        override fun visitKtElement(element: KtElement) {
+            element.acceptChildren(this)
+        }
+    }
+
+    private fun KtExpression.labelLoopJumps(visitor: LabelLoopJumpVisitor): KtExpression {
+        when (this) {
+            is KtBreakExpression, is KtContinueExpression -> {
+                with(visitor) {
+                    return (this@labelLoopJumps as KtExpressionWithLabel).addLabelIfNecessary()
+                }
+            }
+            else -> {
+                this.accept(visitor)
+                return this
+            }
+        }
+    }
+
+    private fun BuilderByPattern<*>.appendElseBlock(block: KtExpression?, visitor: LabelLoopJumpVisitor) {
         appendFixedText("else->")
-        appendExpression(block?.unwrapBlockOrParenthesis())
+        appendExpression(block?.unwrapBlockOrParenthesis()?.labelLoopJumps(visitor))
         appendFixedText("\n")
     }
 
@@ -93,6 +143,7 @@ class IfToWhenIntention : SelfTargetingRangeIntention<KtIfExpression>(KtIfExpres
 
         val toDelete = ArrayList<PsiElement>()
         var applyFullCommentSaver = true
+        val loopJumpVisitor = LabelLoopJumpVisitor()
         var whenExpression = KtPsiFactory(element).buildExpression {
             appendFixedText("when {\n")
 
@@ -111,7 +162,7 @@ class IfToWhenIntention : SelfTargetingRangeIntention<KtIfExpression>(KtIfExpres
                 appendFixedText("->")
 
                 val currentThenBranch = currentIfExpression.then
-                appendExpression(currentThenBranch?.unwrapBlockOrParenthesis())
+                appendExpression(currentThenBranch?.unwrapBlockOrParenthesis()?.labelLoopJumps(loopJumpVisitor))
                 appendFixedText("\n")
 
                 canPassThrough = canPassThrough || canPassThrough(currentThenBranch)
@@ -126,13 +177,13 @@ class IfToWhenIntention : SelfTargetingRangeIntention<KtIfExpression>(KtIfExpres
                         currentIfExpression = syntheticElseBranch
                         toDelete.add(syntheticElseBranch)
                     } else {
-                        appendElseBlock(syntheticElseBranch)
+                        appendElseBlock(syntheticElseBranch, loopJumpVisitor)
                         break
                     }
                 } else if (currentElseBranch is KtIfExpression) {
                     currentIfExpression = currentElseBranch
                 } else {
-                    appendElseBlock(currentElseBranch)
+                    appendElseBlock(currentElseBranch, loopJumpVisitor)
                     applyFullCommentSaver = false
                     break
                 }
@@ -147,8 +198,17 @@ class IfToWhenIntention : SelfTargetingRangeIntention<KtIfExpression>(KtIfExpres
         }
 
         val result = element.replace(whenExpression)
+
         (if (applyFullCommentSaver) fullCommentSaver else elementCommentSaver).restore(result)
         toDelete.forEach(PsiElement::delete)
+
+        val labelName = loopJumpVisitor.labelName
+        if (labelName != null) {
+            val loop = result.getStrictParentOfType<KtLoopExpression>() ?: return
+            val labeledLoopExpression = KtPsiFactory(result).createLabeledExpression(labelName)
+            labeledLoopExpression.baseExpression!!.replace(loop)
+            loop.replace(labeledLoopExpression)
+        }
     }
 
     private fun MutableList<KtExpression>.addOrBranches(expression: KtExpression): List<KtExpression> {
