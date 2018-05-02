@@ -33,10 +33,13 @@ import kotlin.script.experimental.dependencies.ScriptDependencies
 import kotlin.script.experimental.dependencies.ScriptReport
 
 class ScriptContentLoader(private val project: Project) {
-    fun getScriptContents(scriptDefinition: KotlinScriptDefinition, file: VirtualFile)
-            = BasicScriptContents(file, getAnnotations = { loadAnnotations(scriptDefinition, file) })
+    fun getScriptContents(scriptDefinition: KotlinScriptDefinition, file: VirtualFile) =
+        when (scriptDefinition) {
+            is KotlinScriptDefinitionFromTemplate -> BasicScriptContents(file, getAnnotations = { loadAnnotations(scriptDefinition, file) })
+            else -> BasicScriptContents(file, getAnnotations = { emptyList() })
+        }
 
-    private fun loadAnnotations(scriptDefinition: KotlinScriptDefinition, file: VirtualFile): List<Annotation> {
+    private fun loadAnnotations(scriptDefinition: KotlinScriptDefinitionFromTemplate, file: VirtualFile): List<Annotation> {
         val classLoader = scriptDefinition.template.java.classLoader
         // TODO_R: report error on failure to load annotation class
         return ApplicationManager.getApplication().runReadAction<List<Annotation>> {

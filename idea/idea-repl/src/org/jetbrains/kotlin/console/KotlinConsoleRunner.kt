@@ -72,7 +72,7 @@ import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
 import org.jetbrains.kotlin.resolve.lazy.descriptors.LazyScriptDescriptor
 import org.jetbrains.kotlin.resolve.repl.ReplState
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
-import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
 import java.awt.Color
 import java.awt.Font
 import java.util.concurrent.CountDownLatch
@@ -130,7 +130,7 @@ class KotlinConsoleRunner(
     val executor = CommandExecutor(this)
     var compilerHelper: ConsoleCompilerHelper by Delegates.notNull()
 
-    private val consoleScriptDefinition = object : KotlinScriptDefinitionImpl(Any::class) {
+    private val consoleScriptDefinition = object : KotlinScriptDefinitionFromTemplate(Any::class) {
         override val name = "Kotlin REPL"
         override fun isScript(fileName: String): Boolean {
             return fileName == consoleView.virtualFile.name

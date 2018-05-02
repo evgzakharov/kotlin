@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.descriptorUtil.builtIns
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.resolve.lazy.LazyClassContext
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
@@ -38,7 +37,6 @@ import org.jetbrains.kotlin.script.ScriptHelper
 import org.jetbrains.kotlin.script.ScriptPriorities
 import org.jetbrains.kotlin.script.getScriptDefinition
 import org.jetbrains.kotlin.types.TypeSubstitutor
-import org.jetbrains.kotlin.utils.ifEmpty
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -89,7 +87,7 @@ class LazyScriptDescriptor(
     override fun getUnsubstitutedPrimaryConstructor() = super.getUnsubstitutedPrimaryConstructor()!!
 
     override fun computeSupertypes() =
-        listOf(ScriptHelper.getInstance().getKotlinType(this, scriptDefinition.template)).ifEmpty { listOf(builtIns.anyType) }
+        listOf(ScriptHelper.getInstance().getScriptSuperType(this, scriptDefinition))
 
     private val scriptImplicitReceivers: () -> List<ClassDescriptor> = resolveSession.storageManager.createLazyValue {
         scriptDefinition.implicitReceivers.mapNotNull { receiver ->

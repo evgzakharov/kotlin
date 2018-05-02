@@ -37,10 +37,10 @@ import kotlin.script.experimental.location.ScriptExpectedLocation
 import kotlin.script.templates.*
 
 open class KotlinScriptDefinitionFromAnnotatedTemplate(
-        template: KClass<out Any>,
-        val environment: Map<String, Any?>? = null,
-        val templateClasspath: List<File> = emptyList()
-) : KotlinScriptDefinitionImpl(template) {
+    template: KClass<out Any>,
+    val environment: Map<String, Any?>? = null,
+    val templateClasspath: List<File> = emptyList()
+) : KotlinScriptDefinitionFromTemplate(template) {
     val scriptFilePattern by lazy {
         val pattern =
             takeUnlessError {
@@ -153,13 +153,13 @@ open class KotlinScriptDefinitionFromAnnotatedTemplate(
     override val annotationsForSamWithReceivers: List<String>
         get() = samWithReceiverAnnotations ?: super.annotationsForSamWithReceivers
 
-    override val additionalCompilerArguments: Iterable<String>? by lazy {
+    override val additionalCompilerArguments: List<String> by lazy {
         takeUnlessError {
             template.annotations.firstIsInstanceOrNull<kotlin.script.templates.ScriptTemplateAdditionalCompilerArguments>()?.let {
                 val res = it.provider.primaryConstructor?.call(it.arguments.asIterable())
                 res
             }
-        }?.getAdditionalCompilerArguments(environment)
+        }?.getAdditionalCompilerArguments(environment)?.toList() ?: emptyList()
     }
 
     private inline fun<T> takeUnlessError(reportError: Boolean = true, body: () -> T?): T? =

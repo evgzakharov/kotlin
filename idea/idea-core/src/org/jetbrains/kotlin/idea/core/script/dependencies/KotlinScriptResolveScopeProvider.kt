@@ -21,13 +21,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.ResolveScopeProvider
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
-import org.jetbrains.kotlin.idea.core.script.StandardIdeScriptDefinition
-import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromAnnotatedTemplate
 import org.jetbrains.kotlin.script.getScriptDefinition
+import kotlin.script.experimental.scope.ScriptResolutionScope
 
 class KotlinScriptResolveScopeProvider : ResolveScopeProvider() {
     companion object {
-        // Used in LivePlugin
+        @Suppress("unused") // Used in LivePlugin
         val USE_NULL_RESOLVE_SCOPE = "USE_NULL_RESOLVE_SCOPE"
     }
 
@@ -36,12 +35,10 @@ class KotlinScriptResolveScopeProvider : ResolveScopeProvider() {
         // TODO: this should get this particular scripts dependencies
         return when {
             scriptDefinition == null -> null
-        // This is a workaround for completion in scripts and REPL to provide module dependencies
-            scriptDefinition.template == Any::class -> null
-            scriptDefinition is StandardIdeScriptDefinition -> null
-            scriptDefinition is KotlinScriptDefinitionFromAnnotatedTemplate -> // TODO: should include the file itself
-                ScriptDependenciesManager.getInstance(project).getAllScriptsClasspathScope()
-            else -> null
+        // TODO: consider adding classpath scope as well
+            scriptDefinition.scriptResolutionScope == ScriptResolutionScope.WITH_CONTEXT -> null
+        // TODO: should include the file itself
+            else -> ScriptDependenciesManager.getInstance(project).getAllScriptsClasspathScope()
         }
     }
 }

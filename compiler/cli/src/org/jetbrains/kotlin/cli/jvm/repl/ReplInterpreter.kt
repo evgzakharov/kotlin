@@ -27,7 +27,7 @@ import org.jetbrains.kotlin.cli.jvm.config.JvmModulePathRoot
 import org.jetbrains.kotlin.cli.jvm.repl.configuration.ReplConfiguration
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
-import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
 import java.io.PrintWriter
 import java.net.URLClassLoader
 import java.util.concurrent.atomic.AtomicInteger
@@ -115,7 +115,7 @@ class ReplInterpreter(
     }
 
     companion object {
-        private val REPL_LINE_AS_SCRIPT_DEFINITION = object : KotlinScriptDefinitionImpl(Any::class) {
+        private val REPL_LINE_AS_SCRIPT_DEFINITION = object : KotlinScriptDefinitionFromTemplate(Any::class) {
             override val name = "Kotlin REPL"
         }
     }

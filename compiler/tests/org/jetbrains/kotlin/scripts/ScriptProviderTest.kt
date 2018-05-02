@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.scripts
 
 import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
-import org.jetbrains.kotlin.script.KotlinScriptDefinitionImpl
+import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
 import org.jetbrains.kotlin.script.ScriptDefinitionsSource
 import org.jetbrains.kotlin.test.testFramework.KtUsefulTestCase
 import org.junit.Assert
@@ -60,7 +60,7 @@ class ScriptProviderTest : KtUsefulTestCase() {
     }
 }
 
-private class FakeScriptDefinition(val suffix: String = ".kts") : KotlinScriptDefinitionImpl(ScriptTemplateWithArgs::class) {
+private class FakeScriptDefinition(val suffix: String = ".kts") : KotlinScriptDefinitionFromTemplate(ScriptTemplateWithArgs::class) {
     val matchCounter = AtomicInteger()
     override fun isScript(fileName: String): Boolean = fileName.endsWith(suffix).also {
         if (it) matchCounter.incrementAndGet()

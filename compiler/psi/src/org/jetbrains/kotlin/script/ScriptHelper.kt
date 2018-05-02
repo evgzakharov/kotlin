@@ -20,13 +20,12 @@ import org.jetbrains.kotlin.descriptors.ScriptDescriptor
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.KotlinType
 import java.util.*
-import kotlin.reflect.KClass
 
 data class ScriptParameter(val name: Name, val type: KotlinType)
 
 interface ScriptHelper {
     fun getScriptParameters(kotlinScriptDefinition: KotlinScriptDefinition, scriptDefinition: ScriptDescriptor): List<ScriptParameter>
-    fun getKotlinType(scriptDescriptor: ScriptDescriptor, kClass: KClass<out Any>): KotlinType
+    fun getScriptSuperType(scriptDescriptor: ScriptDescriptor, scriptDefinition: KotlinScriptDefinition): KotlinType
 
     companion object {
         private val scriptHelperInstance: ScriptHelper =

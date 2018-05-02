@@ -30,12 +30,10 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
-import kotlin.reflect.full.primaryConstructor
 
 fun KotlinScriptDefinition.getScriptParameters(scriptDescriptor: ScriptDescriptor): List<ScriptParameter> =
-        template.primaryConstructor?.parameters
-                ?.map { ScriptParameter(Name.identifier(it.name!!), getKotlinTypeByKType(scriptDescriptor, it.type)) }
-        ?: emptyList()
+    constructorParameters.map { ScriptParameter(Name.identifier(it.name!!), getKotlinTypeByKType(scriptDescriptor, it.type)) }
+            ?: emptyList()
 
 fun getKotlinTypeByKClass(scriptDescriptor: ScriptDescriptor, kClass: KClass<out Any>): KotlinType =
         getKotlinTypeByFqName(scriptDescriptor,
