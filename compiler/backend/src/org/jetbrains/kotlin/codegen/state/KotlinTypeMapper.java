@@ -10,7 +10,6 @@ import com.intellij.psi.PsiElement;
 import kotlin.Pair;
 import kotlin.Unit;
 import kotlin.collections.CollectionsKt;
-import kotlin.reflect.KType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.builtins.BuiltInsPackageFragment;
@@ -56,6 +55,7 @@ import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodGenericSignature;
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodParameterKind;
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodParameterSignature;
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodSignature;
+import org.jetbrains.kotlin.script.NamedDeclarationWrapper;
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedCallableMemberDescriptor;
 import org.jetbrains.kotlin.types.*;
 import org.jetbrains.kotlin.util.OperatorNameConventions;
@@ -1585,23 +1585,23 @@ public class KotlinTypeMapper {
     @NotNull
     public JvmMethodSignature mapScriptSignature(
             @NotNull ScriptDescriptor script,
-            @NotNull List<ScriptDescriptor> importedScripts,
-            List<? extends KType> implicitReceivers,
-            List<? extends Pair<String, ? extends KType>> environmentVariables
+            @NotNull Boolean hasImportedScripts,
+            @NotNull Boolean hasImplicitReceivers,
+            @NotNull Boolean hasEnvironmentVariables
     ) {
         JvmSignatureWriter sw = new BothSignatureWriter(BothSignatureWriter.Mode.METHOD);
 
         sw.writeParametersStart();
 
-        if (importedScripts.size() > 0) {
+        if (hasImportedScripts) {
             writeParameter(sw, DescriptorUtilsKt.getModule(script).getBuiltIns().getArray().getDefaultType(), null);
         }
 
-        if (implicitReceivers.size() > 0) {
+        if (hasImplicitReceivers) {
             writeParameter(sw, DescriptorUtilsKt.getModule(script).getBuiltIns().getArray().getDefaultType(), null);
         }
 
-        if (environmentVariables.size() > 0) {
+        if (hasEnvironmentVariables) {
             writeParameter(sw, DescriptorUtilsKt.getModule(script).getBuiltIns().getMap().getDefaultType(), null);
         }
 

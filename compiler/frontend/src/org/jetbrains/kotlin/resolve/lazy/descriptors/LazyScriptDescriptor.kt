@@ -20,8 +20,6 @@ import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory1
 import org.jetbrains.kotlin.diagnostics.Errors
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
@@ -30,21 +28,18 @@ import org.jetbrains.kotlin.resolve.lazy.ResolveSession
 import org.jetbrains.kotlin.resolve.lazy.data.KtScriptInfo
 import org.jetbrains.kotlin.resolve.lazy.declarations.ClassMemberDeclarationProvider
 import org.jetbrains.kotlin.resolve.lazy.descriptors.script.ScriptEnvironmentDescriptor
-import org.jetbrains.kotlin.resolve.scopes.*
+import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.resolve.scopes.LexicalScopeImpl
+import org.jetbrains.kotlin.resolve.scopes.LexicalScopeKind
 import org.jetbrains.kotlin.resolve.source.toSourceElement
-import org.jetbrains.kotlin.script.KotlinScriptDefinition
-import org.jetbrains.kotlin.script.ScriptHelper
-import org.jetbrains.kotlin.script.ScriptPriorities
-import org.jetbrains.kotlin.script.getScriptDefinition
+import org.jetbrains.kotlin.script.*
 import org.jetbrains.kotlin.types.TypeSubstitutor
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
 
 class LazyScriptDescriptor(
     val resolveSession: ResolveSession,
     containingDeclaration: DeclarationDescriptor,
     name: Name,
-    internal val scriptInfo: KtScriptInfo
+    val scriptInfo: KtScriptInfo
 ) : ScriptDescriptor, LazyClassDescriptor(
     resolveSession,
     containingDeclaration,
@@ -95,7 +90,7 @@ class LazyScriptDescriptor(
         }
     }
 
-    internal fun findTypeDescriptor(type: KType, errorDiagnostic: DiagnosticFactory1<PsiElement, String>): ClassDescriptor? {
+    internal fun findTypeDescriptor(type: KotlinTypeWrapper, errorDiagnostic: DiagnosticFactory1<PsiElement, String>): ClassDescriptor? {
         val receiverClassId = type.classId
         return receiverClassId?.let {
             module.findClassAcrossModuleDependencies(it)
@@ -141,11 +136,4 @@ class LazyScriptDescriptor(
 
     override fun getOuterScope(): LexicalScope = scriptOuterScope()
 }
-
-private val KClass<*>.classId: ClassId
-    get() = this.java.enclosingClass?.kotlin?.classId?.createNestedClassId(Name.identifier(simpleName!!))
-            ?: ClassId.topLevel(FqName(qualifiedName!!))
-
-private val KType.classId: ClassId?
-    get() = classifier?.let { it as? KClass<*> }?.classId
 

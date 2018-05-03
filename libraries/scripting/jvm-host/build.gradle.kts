@@ -15,6 +15,7 @@ dependencies {
     compile(project(":kotlin-scripting-jvm"))
     compile(project(":kotlin-script-util"))
     compileOnly(project(":compiler:cli"))
+    compileOnly(project(":kotlin-reflect-api"))
     compileOnly(intellijCoreDep())
 }
 

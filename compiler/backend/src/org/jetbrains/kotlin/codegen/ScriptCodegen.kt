@@ -75,9 +75,9 @@ class ScriptCodegen private constructor(
 
         val jvmSignature = typeMapper.mapScriptSignature(
             scriptDescriptor,
-            scriptContext.earlierScripts,
-            scriptDefinition.implicitReceivers,
-            scriptDefinition.environmentVariables
+            scriptContext.earlierScripts.isNotEmpty(),
+            scriptDefinition.implicitReceivers.isNotEmpty(),
+            scriptDefinition.environmentVariables.isNotEmpty()
         )
 
         if (state.replSpecific.shouldGenerateScriptResultValue) {

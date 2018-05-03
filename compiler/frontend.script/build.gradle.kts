@@ -10,6 +10,7 @@ jvmTarget = "1.6"
 dependencies {
     compile(project(":compiler:util"))
     compile(project(":compiler:frontend"))
+    compile(project(":compiler:frontend.java"))
     compile(projectDist(":kotlin-stdlib"))
     compileOnly(project(":kotlin-reflect-api"))
     compile(commonDep("org.jetbrains.kotlinx", "kotlinx-coroutines-core")) { isTransitive = false }

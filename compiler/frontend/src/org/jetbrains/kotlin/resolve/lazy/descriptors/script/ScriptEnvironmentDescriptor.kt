@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.resolve.lazy.descriptors.LazyScriptDescriptor
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScopeImpl
+import org.jetbrains.kotlin.script.ScriptHelper
 import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.utils.Printer
 
@@ -43,9 +44,9 @@ class ScriptEnvironmentDescriptor(script: LazyScriptDescriptor) :
     override fun getUnsubstitutedMemberScope(): MemberScope = memberScope()
 
     val properties: () -> List<ScriptEnvironmentPropertyDescriptor> = script.resolveSession.storageManager.createLazyValue {
-        script.scriptDefinition.environmentVariables.mapNotNull { (name, type) ->
+        ScriptHelper.getInstance().getCheckedEnvironmentProperties(script, script.scriptDefinition).mapNotNull { (name, type) ->
             script.findTypeDescriptor(type, Errors.MISSING_SCRIPT_ENVIRONMENT_PROPERTY_CLASS)?.let {
-                name to it
+                name!! to it
             }
         }.map { (name, classDescriptor) ->
             ScriptEnvironmentPropertyDescriptor(

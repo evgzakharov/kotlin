@@ -26,6 +26,8 @@ data class ScriptParameter(val name: Name, val type: KotlinType)
 interface ScriptHelper {
     fun getScriptParameters(kotlinScriptDefinition: KotlinScriptDefinition, scriptDefinition: ScriptDescriptor): List<ScriptParameter>
     fun getScriptSuperType(scriptDescriptor: ScriptDescriptor, scriptDefinition: KotlinScriptDefinition): KotlinType
+    fun getCheckedEnvironmentProperties(scriptDescriptor: ScriptDescriptor, scriptDefinition: KotlinScriptDefinition)
+            : List<NamedDeclarationWrapper>
 
     companion object {
         private val scriptHelperInstance: ScriptHelper =

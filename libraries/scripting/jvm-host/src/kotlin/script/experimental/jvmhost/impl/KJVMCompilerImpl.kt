@@ -31,11 +31,13 @@ import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.parsing.KotlinParserDefinition
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.script.KotlinReflectedType
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
 import org.jetbrains.kotlin.script.util.KotlinJars
 import java.io.File
 import java.net.URLClassLoader
 import kotlin.reflect.KClass
+import kotlin.reflect.full.starProjectedType
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.dependencies.DependenciesResolver
 import kotlin.script.experimental.host.getMergedScriptText
@@ -238,8 +240,9 @@ internal class BridgeScriptDefinition(
     updateClasspath: (List<File>) -> Unit
 ) : KotlinScriptDefinitionFromTemplate(scriptCompilerConfiguration[ScriptingEnvironmentProperties.baseClass] as KClass<out Any>) {
     override val acceptedAnnotations =
-        scriptCompilerConfiguration.getOrNull(ScriptCompileConfigurationProperties.refineConfigurationOnAnnotations)?.toList()
-                ?: emptyList()
+        scriptCompilerConfiguration.getOrNull(ScriptCompileConfigurationProperties.refineConfigurationOnAnnotations)?.map {
+            KotlinReflectedType(it.starProjectedType)
+        } ?: emptyList()
 
     override val dependencyResolver: DependenciesResolver =
         BridgeDependenciesResolver(scriptConfigurator, scriptCompilerConfiguration, updateClasspath)

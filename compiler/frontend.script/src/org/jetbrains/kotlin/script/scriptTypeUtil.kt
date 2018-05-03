@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.script
 
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.NotFoundClasses
 import org.jetbrains.kotlin.descriptors.ScriptDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
@@ -31,39 +32,41 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
 
-fun KotlinScriptDefinition.getScriptParameters(scriptDescriptor: ScriptDescriptor): List<ScriptParameter> =
-    constructorParameters.map { ScriptParameter(Name.identifier(it.name!!), getKotlinTypeByKType(scriptDescriptor, it.type)) }
+fun KotlinScriptDefinition.getScriptParameters(module: ModuleDescriptor): List<ScriptParameter> =
+    constructorParameters.map { ScriptParameter(Name.identifier(it.name!!), it.type.kotlinTypeInModule(module)) }
             ?: emptyList()
 
-fun getKotlinTypeByKClass(scriptDescriptor: ScriptDescriptor, kClass: KClass<out Any>): KotlinType =
-        getKotlinTypeByFqName(scriptDescriptor,
-                              kClass.qualifiedName ?: throw RuntimeException("Cannot get FQN from $kClass"))
+fun getKotlinTypeByKClass(module: ModuleDescriptor, kClass: KClass<out Any>): KotlinType =
+    getKotlinTypeByFqName(
+        module,
+        kClass.qualifiedName ?: throw RuntimeException("Cannot get FQN from $kClass")
+    )
 
-private fun getKotlinTypeByFqName(scriptDescriptor: ScriptDescriptor, fqName: String): KotlinType =
-        scriptDescriptor.module.findNonGenericClassAcrossDependencies(
-                ClassId.topLevel(FqName(fqName)),
-                NotFoundClasses(LockBasedStorageManager.NO_LOCKS, scriptDescriptor.module)
-        ).defaultType
+private fun getKotlinTypeByFqName(module: ModuleDescriptor, fqName: String): KotlinType =
+    module.findNonGenericClassAcrossDependencies(
+        ClassId.topLevel(FqName(fqName)),
+        NotFoundClasses(LockBasedStorageManager.NO_LOCKS, module)
+    ).defaultType
 
 // TODO: support star projections
 // TODO: support annotations on types and type parameters
 // TODO: support type parameters on types and type projections
-private fun getKotlinTypeByKType(scriptDescriptor: ScriptDescriptor, kType: KType): KotlinType {
+internal fun getKotlinTypeByKType(module: ModuleDescriptor, kType: KType): KotlinType {
     val classifier = kType.classifier
     if (classifier !is KClass<*>)
         throw java.lang.UnsupportedOperationException("Only classes are supported as parameters in script template: $classifier")
 
-    val type = getKotlinTypeByKClass(scriptDescriptor, classifier)
-    val typeProjections = kType.arguments.map { getTypeProjection(scriptDescriptor, it) }
+    val type = getKotlinTypeByKClass(module, classifier)
+    val typeProjections = kType.arguments.map { getTypeProjection(module, it) }
     val isNullable = kType.isMarkedNullable
 
     return KotlinTypeFactory.simpleType(Annotations.EMPTY, type.constructor, typeProjections, isNullable)
 }
 
-private fun getTypeProjection(scriptDescriptor: ScriptDescriptor, kTypeProjection: KTypeProjection): TypeProjection {
+private fun getTypeProjection(module: ModuleDescriptor, kTypeProjection: KTypeProjection): TypeProjection {
     val kType = kTypeProjection.type ?: throw java.lang.UnsupportedOperationException("Star projections are not supported")
 
-    val type = getKotlinTypeByKType(scriptDescriptor, kType)
+    val type = getKotlinTypeByKType(module, kType)
 
     val variance = when (kTypeProjection.variance) {
         KVariance.IN -> Variance.IN_VARIANCE

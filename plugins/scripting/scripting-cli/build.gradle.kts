@@ -13,6 +13,7 @@ dependencies {
     compileOnly(project(":compiler:cli"))
     compile(project(":kotlin-scripting-common"))
     compile(project(":kotlin-scripting-jvm"))
+    compileOnly(project(":kotlin-reflect-api"))
     compileOnly(intellijCoreDep()) { includeJars("intellij-core") }
 
     testCompile(project(":compiler:frontend"))

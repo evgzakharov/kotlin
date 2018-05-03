@@ -29,12 +29,13 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.starProjectedType
 import kotlin.script.dependencies.ScriptDependenciesResolver
 import kotlin.script.experimental.dependencies.AsyncDependenciesResolver
 import kotlin.script.experimental.dependencies.DependenciesResolver
-import kotlin.script.experimental.location.ScriptExpectedLocations
 import kotlin.script.experimental.location.ScriptExpectedLocation
-import kotlin.script.templates.*
+import kotlin.script.experimental.location.ScriptExpectedLocations
+import kotlin.script.templates.AcceptedAnnotations
 
 open class KotlinScriptDefinitionFromAnnotatedTemplate(
     template: KClass<out Any>,
@@ -104,24 +105,25 @@ open class KotlinScriptDefinitionFromAnnotatedTemplate(
         ?: takeUnlessError { template.annotations.firstIsInstanceOrNull<org.jetbrains.kotlin.script.SamWithReceiverAnnotations>()?.annotations?.toList() }
     }
 
-    override val acceptedAnnotations: List<KClass<out Annotation>> by lazy {
+    override val acceptedAnnotations: List<KotlinTypeWrapper> by lazy {
 
         fun sameSignature(left: KFunction<*>, right: KFunction<*>): Boolean =
-                left.name == right.name &&
-                left.parameters.size == right.parameters.size &&
-                left.parameters.zip(right.parameters).all {
-                    it.first.kind == KParameter.Kind.INSTANCE ||
-                    it.first.type == it.second.type
-                }
+            left.name == right.name &&
+            left.parameters.size == right.parameters.size &&
+            left.parameters.zip(right.parameters).all {
+                it.first.kind == KParameter.Kind.INSTANCE ||
+                it.first.type == it.second.type
+            }
 
         val resolveFunctions = getResolveFunctions()
 
         dependencyResolver.unwrap()::class.memberFunctions
-                .filter { function -> resolveFunctions.any { sameSignature(function, it) } }
-                .flatMap { it.annotations }
-                .filterIsInstance<AcceptedAnnotations>()
-                .flatMap { it.supportedAnnotationClasses.toList() }
-                .distinctBy { it.qualifiedName }
+            .filter { function -> resolveFunctions.any { sameSignature(function, it) } }
+            .flatMap { it.annotations }
+            .filterIsInstance<AcceptedAnnotations>()
+            .flatMap { it.supportedAnnotationClasses.toList() }
+            .distinctBy { it.qualifiedName }
+            .map { KotlinReflectedType(it.starProjectedType) }
     }
 
     private fun getResolveFunctions(): List<KFunction<*>> {

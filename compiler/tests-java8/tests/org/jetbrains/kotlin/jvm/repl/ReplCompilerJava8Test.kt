@@ -110,7 +110,8 @@ class ReplCompilerJava8Test : KtUsefulTestCase() {
 
     private fun runTest(configuration: CompilerConfiguration): ReplCompileResult {
         val collector = PrintingMessageCollector(System.out, MessageRenderer.WITHOUT_PATHS, false)
-        val replCompiler = GenericReplCompiler(testRootDisposable, StandardScriptDefinition, configuration, collector)
+        val replCompiler = GenericReplCompiler(testRootDisposable,
+                                               StandardScriptDefinition, configuration, collector)
         val state = replCompiler.createState()
 
         return replCompiler.compile(state, ReplCodeLine(0, 0, script))

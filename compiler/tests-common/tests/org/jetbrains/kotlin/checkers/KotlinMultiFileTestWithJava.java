@@ -6,7 +6,6 @@
 package org.jetbrains.kotlin.checkers;
 
 import com.intellij.openapi.util.io.FileUtil;
-import kotlin.collections.CollectionsKt;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
 import org.jetbrains.annotations.NotNull;

@@ -10,9 +10,11 @@ import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.NameUtils
 import org.jetbrains.kotlin.psi.KtScript
+import org.jetbrains.kotlin.script.KotlinReflectedType
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
+import org.jetbrains.kotlin.script.KotlinTypeWrapper
+import org.jetbrains.kotlin.script.NamedDeclarationWrapper
+import kotlin.reflect.full.starProjectedType
 import kotlin.script.experimental.api.ScriptCompileConfigurationProperties
 import kotlin.script.experimental.api.ScriptDefinition
 import kotlin.script.experimental.api.ScriptDefinitionProperties
@@ -46,19 +48,22 @@ class KotlinScriptDefinitionAdapterFromNewAPI(val scriptDefinition: ScriptDefini
         BridgeDependenciesResolver(scriptDefinition.compilationConfigurator)
     }
 
-    override val acceptedAnnotations: List<KClass<out Annotation>> by lazy {
-        scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.refineConfigurationOnAnnotations)?.toList()
-                ?: emptyList()
+    override val acceptedAnnotations: List<KotlinTypeWrapper> by lazy {
+        scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.refineConfigurationOnAnnotations)?.map {
+            KotlinReflectedType(it.starProjectedType)
+        } ?: emptyList()
     }
 
-    override val implicitReceivers: List<KType> by lazy {
-        scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.scriptImplicitReceivers)
-                ?: emptyList()
+    override val implicitReceivers: List<KotlinTypeWrapper> by lazy {
+        scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.scriptImplicitReceivers)?.map {
+            KotlinReflectedType(it)
+        } ?: emptyList()
     }
 
-    override val environmentVariables: List<Pair<String, KType>> by lazy {
-        scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.contextVariables)?.map { (k, v) -> k to v }
-                ?: emptyList()
+    override val environmentVariables: List<NamedDeclarationWrapper> by lazy {
+        scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.contextVariables)?.map { (name, type) ->
+            NamedDeclarationWrapper(name, KotlinReflectedType(type))
+        } ?: emptyList()
     }
 }
 

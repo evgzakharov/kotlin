@@ -16,25 +16,21 @@
 
 package org.jetbrains.kotlin.codegen.context
 
-import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.FieldInfo
 import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.StackValue
 import org.jetbrains.kotlin.codegen.state.KotlinTypeMapper
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ScriptDescriptor
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtAnonymousInitializer
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtScript
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.resolve.jvm.AsmTypes
 import org.jetbrains.kotlin.resolve.lazy.descriptors.script.ScriptEnvironmentDescriptor
 import org.jetbrains.org.objectweb.asm.Type
-import kotlin.reflect.KClass
 
 class ScriptContext(
     val typeMapper: KotlinTypeMapper,
@@ -68,8 +64,7 @@ class ScriptContext(
 
     fun getImplicitReceiverType(index: Int): Type? {
         val receivers = script.kotlinScriptDefinition.value.implicitReceivers
-        val kClass = receivers.getOrNull(index)?.classifier as? KClass<*>
-        return kClass?.java?.classId?.let(AsmUtil::asmTypeByClassId)
+        return receivers.getOrNull(index)?.kotlinTypeInModule(contextDescriptor.module)?.let { typeMapper.mapType(it) }
     }
 
     fun getOuterReceiverExpression(prefix: StackValue?, thisOrOuterClass: ClassDescriptor): StackValue {
@@ -103,5 +98,3 @@ class ScriptContext(
     }
 }
 
-private val Class<*>.classId: ClassId
-    get() = enclosingClass?.classId?.createNestedClassId(Name.identifier(simpleName)) ?: ClassId.topLevel(FqName(name))

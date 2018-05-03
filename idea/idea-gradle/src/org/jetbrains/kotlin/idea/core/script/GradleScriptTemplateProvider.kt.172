@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.psi.KtScript
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromAnnotatedTemplate
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
+import org.jetbrains.kotlin.script.KotlinTypeWrapper
 import org.jetbrains.plugins.gradle.config.GradleSettingsListenerAdapter
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionHelper
 import org.jetbrains.plugins.gradle.settings.DistributionType
@@ -45,7 +46,6 @@ import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.io.File
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.reflect.KClass
 import kotlin.script.dependencies.Environment
 import kotlin.script.dependencies.ScriptContents
 import kotlin.script.experimental.dependencies.DependenciesResolver
@@ -232,7 +232,7 @@ class GradleScriptDefinitionsContributor(private val project: Project) : ScriptD
         override val name: String = "Default Kotlin Gradle Script"
         override val fileType: LanguageFileType = KotlinFileType.INSTANCE
         override val annotationsForSamWithReceivers: List<String> = emptyList()
-        override val acceptedAnnotations: List<KClass<out Annotation>> = emptyList()
+        override val acceptedAnnotations: List<KotlinTypeWrapper> = emptyList()
 
         override val dependencyResolver: DependenciesResolver = ErrorScriptDependenciesResolver(message)
 

@@ -356,6 +356,8 @@ public class DefaultErrorMessages {
         MAP.put(MISSING_DEPENDENCY_CLASS, "Cannot access class ''{0}''. Check your module classpath for missing or conflicting dependencies", TO_STRING);
         MAP.put(MISSING_SCRIPT_RECEIVER_CLASS, "Cannot access implicit script receiver class ''{0}''. Check your module classpath for missing or conflicting dependencies", TO_STRING);
         MAP.put(MISSING_SCRIPT_ENVIRONMENT_PROPERTY_CLASS, "Cannot access script environment property class ''{0}''. Check your module classpath for missing or conflicting dependencies", TO_STRING);
+        MAP.put(INVALID_SCRIPT_ENVIRONMENT_PROPERTY_NAME, "Invalid script environment property name ''{0}''", TO_STRING);
+        MAP.put(NON_UNIQUE_SCRIPT_ENVIRONMENT_PROPERTY_NAME, "Script environment property name is not unique ''{0}''", TO_STRING);
         MAP.put(PRE_RELEASE_CLASS, "{0} is compiled by a pre-release version of Kotlin and cannot be loaded by this version of the compiler", TO_STRING);
         MAP.put(INCOMPATIBLE_CLASS,
                 "{0} was compiled with an incompatible version of Kotlin. {1}",
