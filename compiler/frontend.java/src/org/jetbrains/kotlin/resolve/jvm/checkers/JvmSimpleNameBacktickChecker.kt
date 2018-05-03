@@ -27,7 +27,7 @@ object JvmSimpleNameBacktickChecker : IdentifierChecker {
     private val CHARS = setOf('.', ';', '[', ']', '/', '<', '>', ':', '\\')
 
     override fun checkIdentifier(simpleNameExpression: KtSimpleNameExpression, diagnosticHolder: DiagnosticSink) {
-        reportIfNeeded(simpleNameExpression.getReferencedName(), { simpleNameExpression.getIdentifier() }, diagnosticHolder)
+        checkStringIdentifier(simpleNameExpression.getReferencedName(), { simpleNameExpression.getIdentifier() }, diagnosticHolder)
     }
 
     override fun checkDeclaration(declaration: KtDeclaration, diagnosticHolder: DiagnosticSink) {
@@ -48,22 +48,32 @@ object JvmSimpleNameBacktickChecker : IdentifierChecker {
     private fun checkNamed(declaration: KtNamedDeclaration, diagnosticHolder: DiagnosticSink) {
         val name = declaration.name ?: return
 
-        reportIfNeeded(name, { declaration.nameIdentifier ?: declaration }, diagnosticHolder)
+        checkStringIdentifier(name, { declaration.nameIdentifier ?: declaration }, diagnosticHolder)
     }
 
-    private fun reportIfNeeded(name: String, reportOn: () -> PsiElement?, diagnosticHolder: DiagnosticSink) {
+    fun checkStringIdentifier(name: String, reportOn: () -> PsiElement?, diagnosticHolder: DiagnosticSink): Boolean {
         val text = KtPsiUtil.unquoteIdentifier(name)
-        if (text.isEmpty()) {
-            diagnosticHolder.report(Errors.INVALID_CHARACTERS.on(reportOn() ?: return, "should not be empty"))
-        } else if (text.any { it in CHARS }) {
-            diagnosticHolder.report(
-                Errors.INVALID_CHARACTERS.on(
-                    reportOn() ?: return,
-                    "contains illegal characters: ${CHARS.intersect(text.toSet()).joinToString(
-                        ""
-                    )}"
-                )
-            )
+        return when {
+            text.isEmpty() -> {
+                reportOn()?.let { psiElement ->
+                    diagnosticHolder.report(Errors.INVALID_CHARACTERS.on(psiElement, "should not be empty"))
+                }
+                false
+            }
+            text.any { it in CHARS } -> {
+                reportOn()?.let { psiElement ->
+                    diagnosticHolder.report(
+                        Errors.INVALID_CHARACTERS.on(
+                            psiElement,
+                            "contains illegal characters: ${CHARS.intersect(text.toSet()).joinToString(
+                                ""
+                            )}"
+                        )
+                    )
+                }
+                false
+            }
+            else -> true
         }
     }
 }
