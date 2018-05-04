@@ -46,7 +46,7 @@ abstract class KotlinAndroid3GradleIT(
 
         project.build(":Lib:assemble") {
             assertSuccessful()
-            assertContains(*kotlinTaskNames.toTypedArray())
+            assertTasksExecuted(*kotlinTaskNames.toTypedArray())
         }
     }
 }
@@ -119,8 +119,7 @@ abstract class AbstractKotlinAndroidGradleTests(
             assertSuccessful()
             if (isLegacyAndroidGradleVersion(androidGradlePluginVersion)) {
                 // with the new AGP we don't need copy classes tasks
-                assertContains(":copyFlavor1DebugKotlinClasses")
-                assertContains(":copyFlavor2DebugKotlinClasses")
+                assertTasksExecuted(":copyFlavor1DebugKotlinClasses", ":copyFlavor2DebugKotlinClasses")
             }
         }
     }
@@ -153,19 +152,19 @@ fun getSomething() = 10
     @Test
     fun testIncrementalBuildWithNoChanges() {
         val project = Project("AndroidIncrementalSingleModuleProject", gradleVersion)
-        val tasksToExecute = arrayOf(
+        val tasksToExecute = listOf(
             ":app:compileDebugKotlin",
             ":app:compileDebugJavaWithJavac"
         )
 
         project.build("assembleDebug") {
             assertSuccessful()
-            assertContains(*tasksToExecute)
+            assertTasksExecuted(tasksToExecute)
         }
 
         project.build("assembleDebug") {
             assertSuccessful()
-            assertContains(*tasksToExecute.map { it + " UP-TO-DATE" }.toTypedArray())
+            assertTasksUpToDate(tasksToExecute)
         }
     }
 
@@ -287,7 +286,7 @@ fun getSomething() = 10
 
         project.build("build") {
             assertSuccessful()
-            assertContains(
+            assertTasksExecuted(
                 ":lib:compileKotlinCommon",
                 ":lib:compileTestKotlinCommon",
                 ":libJvm:compileKotlin",
