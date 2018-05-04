@@ -93,7 +93,7 @@ open class Kapt3IT : Kapt3BaseIT() {
         project.build("build", options = options) {
             assertSuccessful()
             assertKaptSuccessful()
-            assertTasksExecuted(":compileKotlin", ":compileJava")
+            assertTasksExecuted(":compileKotlin")
             assertClassFilesNotContain(javaClassesDir, "ExampleSourceAnnotation")
         }
 
