@@ -10,10 +10,8 @@ import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.NameUtils
 import org.jetbrains.kotlin.psi.KtScript
-import org.jetbrains.kotlin.script.KotlinReflectedType
-import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromTemplate
-import org.jetbrains.kotlin.script.KotlinTypeWrapper
-import org.jetbrains.kotlin.script.NamedDeclarationWrapper
+import org.jetbrains.kotlin.script.*
+import kotlin.reflect.KClass
 import kotlin.reflect.full.starProjectedType
 import kotlin.script.experimental.api.ScriptCompileConfigurationProperties
 import kotlin.script.experimental.api.ScriptDefinition
@@ -21,20 +19,22 @@ import kotlin.script.experimental.api.ScriptDefinitionProperties
 import kotlin.script.experimental.api.ScriptingEnvironmentProperties
 import kotlin.script.experimental.dependencies.DependenciesResolver
 import kotlin.script.experimental.jvm.impl.BridgeDependenciesResolver
+import kotlin.script.experimental.location.ScriptExpectedLocation
+import kotlin.script.experimental.scope.ScriptResolutionScope
 
-class KotlinScriptDefinitionAdapterFromNewAPI(val scriptDefinition: ScriptDefinition) :
-    KotlinScriptDefinitionFromTemplate(scriptDefinition.compilationConfigurator.defaultConfiguration[ScriptingEnvironmentProperties.baseClass]) {
+abstract class KotlinScriptDefinitionAdapterFromNewAPIBase : KotlinScriptDefinition {
 
-    override val name: String get() = scriptDefinition.properties.getOrNull(ScriptDefinitionProperties.name) ?: super.name
+    protected abstract val scriptDefinition: ScriptDefinition
 
-    // TODO: consider creating separate type (subtype? for kotlin scripts)
+    protected abstract val scriptFileExtensionWithDot: String
+
+    open val baseClass: KClass<*>
+        get() = scriptDefinition.compilationConfigurator.defaultConfiguration[ScriptingEnvironmentProperties.baseClass]
+
+    override val name: String
+        get() = scriptDefinition.properties.getOrNull(ScriptDefinitionProperties.name) ?: "Kotlin Script"
+
     override val fileType: LanguageFileType = KotlinFileType.INSTANCE
-
-    override val annotationsForSamWithReceivers: List<String>
-        get() = emptyList()
-
-    private val scriptFileExtensionWithDot =
-        "." + (scriptDefinition.properties.getOrNull(ScriptDefinitionProperties.fileExtension) ?: "kts")
 
     override fun isScript(fileName: String): Boolean =
         fileName.endsWith(scriptFileExtensionWithDot)
@@ -43,6 +43,9 @@ class KotlinScriptDefinitionAdapterFromNewAPI(val scriptDefinition: ScriptDefini
         val fileBasedName = NameUtils.getScriptNameForFile(script.containingKtFile.name)
         return Name.identifier(fileBasedName.identifier.removeSuffix(scriptFileExtensionWithDot))
     }
+
+    override val annotationsForSamWithReceivers: List<String>
+        get() = emptyList()
 
     override val dependencyResolver: DependenciesResolver by lazy {
         BridgeDependenciesResolver(scriptDefinition.compilationConfigurator)
@@ -65,6 +68,38 @@ class KotlinScriptDefinitionAdapterFromNewAPI(val scriptDefinition: ScriptDefini
             NamedDeclarationWrapper(name, KotlinReflectedType(type))
         } ?: emptyList()
     }
+
+    override val additionalCompilerArguments: List<String>
+        get() = scriptDefinition.compilationConfigurator.defaultConfiguration.getOrNull(ScriptCompileConfigurationProperties.compilerOptions)
+                ?: emptyList()
+
+    override val scriptExpectedLocations: List<ScriptExpectedLocation> =
+        listOf(
+            ScriptExpectedLocation.SourcesOnly,
+            ScriptExpectedLocation.TestsOnly
+        )
+
+    override val scriptResolutionScope: ScriptResolutionScope =
+        ScriptResolutionScope.WITH_CONTEXT
+
+    override val constructorParameters: List<NamedDeclarationWrapper>
+        get() = baseClass.constructors.first().parameters.map {
+            NamedDeclarationWrapper(
+                it.name,
+                KotlinReflectedType(
+                    it.type
+                )
+            )
+        }
 }
 
 
+class KotlinScriptDefinitionAdapterFromNewAPI(
+    override val scriptDefinition: ScriptDefinition
+) : KotlinScriptDefinitionAdapterFromNewAPIBase() {
+
+    override val name: String get() = scriptDefinition.properties.getOrNull(ScriptDefinitionProperties.name) ?: super.name
+
+    override val scriptFileExtensionWithDot =
+        "." + (scriptDefinition.properties.getOrNull(ScriptDefinitionProperties.fileExtension) ?: "kts")
+}
