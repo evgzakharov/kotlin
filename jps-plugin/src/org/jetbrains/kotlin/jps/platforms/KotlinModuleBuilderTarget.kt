@@ -5,12 +5,8 @@
 
 package org.jetbrains.kotlin.jps.platforms
 
-import com.intellij.util.containers.MultiMap
 import org.jetbrains.jps.ModuleChunk
 import org.jetbrains.jps.builders.BuildRootDescriptor
-import org.jetbrains.jps.builders.DirtyFilesHolder
-import org.jetbrains.jps.builders.impl.BuildRootDescriptorImpl
-import org.jetbrains.jps.builders.java.JavaSourceRootDescriptor
 import org.jetbrains.jps.incremental.CompileContext
 import org.jetbrains.jps.incremental.ModuleBuildTarget
 import org.jetbrains.jps.incremental.ProjectBuildException
@@ -23,8 +19,9 @@ import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.compilerRunner.JpsCompilerEnvironment
 import org.jetbrains.kotlin.jps.build.FSOperationsHelper
+import org.jetbrains.kotlin.jps.build.KotlinChunkDirtySourceFilesHolder
 import org.jetbrains.kotlin.jps.build.KotlinCommonModuleSourceRoot
-import org.jetbrains.kotlin.jps.build.KotlinSourceFileCollector
+import org.jetbrains.kotlin.jps.build.isKotlinSourceFile
 import org.jetbrains.kotlin.jps.model.productionOutputFilePath
 import org.jetbrains.kotlin.jps.model.testOutputFilePath
 import org.jetbrains.kotlin.modules.TargetId
@@ -117,10 +114,7 @@ abstract class KotlinModuleBuilderTarget(val context: CompileContext, val jpsMod
             sourceRoot.file.walkTopDown()
                 .onEnter { it !in moduleExcludes }
                 .forEach {
-                    if (!compilerExcludes.isExcluded(it) &&
-                        it.isFile &&
-                        KotlinSourceFileCollector.isKotlinSourceFile(it)
-                    ) {
+                    if (!compilerExcludes.isExcluded(it) && it.isFile && it.isKotlinSourceFile) {
                         val rootDescriptors = buildRootIndex.getRootDescriptors<BuildRootDescriptor>(it, null, context)
 
                         receiver[it.path] = Source(it, rootDescriptors.any { it is KotlinCommonModuleSourceRoot })
@@ -135,9 +129,8 @@ abstract class KotlinModuleBuilderTarget(val context: CompileContext, val jpsMod
         allCompiledFiles: MutableSet<File>,
         chunk: ModuleChunk,
         commonArguments: CommonCompilerArguments,
-        dirtyFilesHolder: DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget>,
+        dirtyFilesHolder: KotlinChunkDirtySourceFilesHolder,
         environment: JpsCompilerEnvironment,
-        filesToCompile: MultiMap<ModuleBuildTarget, File>,
         fsOperations: FSOperationsHelper
     ): Boolean
 

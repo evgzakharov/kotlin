@@ -5,10 +5,7 @@
 
 package org.jetbrains.kotlin.jps.platforms
 
-import com.intellij.util.containers.MultiMap
 import org.jetbrains.jps.ModuleChunk
-import org.jetbrains.jps.builders.DirtyFilesHolder
-import org.jetbrains.jps.builders.java.JavaSourceRootDescriptor
 import org.jetbrains.jps.incremental.CompileContext
 import org.jetbrains.jps.incremental.FSOperations
 import org.jetbrains.jps.incremental.ModuleBuildTarget
@@ -20,6 +17,7 @@ import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.compilerRunner.JpsCompilerEnvironment
 import org.jetbrains.kotlin.config.IncrementalCompilation
 import org.jetbrains.kotlin.jps.build.FSOperationsHelper
+import org.jetbrains.kotlin.jps.build.KotlinChunkDirtySourceFilesHolder
 import org.jetbrains.kotlin.jps.model.k2MetadataCompilerArguments
 import java.io.File
 
@@ -30,9 +28,8 @@ class KotlinCommonModuleBuildTarget(context: CompileContext, jpsModuleBuildTarge
         allCompiledFiles: MutableSet<File>,
         chunk: ModuleChunk,
         commonArguments: CommonCompilerArguments,
-        dirtyFilesHolder: DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget>,
+        dirtyFilesHolder: KotlinChunkDirtySourceFilesHolder,
         environment: JpsCompilerEnvironment,
-        filesToCompile: MultiMap<ModuleBuildTarget, File>,
         fsOperations: FSOperationsHelper
     ): Boolean {
         require(chunk.representativeTarget() == jpsModuleBuildTarget)
