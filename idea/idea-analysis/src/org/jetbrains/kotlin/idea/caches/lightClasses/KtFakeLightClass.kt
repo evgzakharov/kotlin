@@ -16,12 +16,13 @@
 
 package org.jetbrains.kotlin.idea.caches.lightClasses
 
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElementFactory
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiType
+import com.intellij.openapi.project.Project
+import com.intellij.psi.*
+import com.intellij.psi.impl.PsiElementFactoryImpl
+import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.psi.impl.light.AbstractLightClass
 import com.intellij.psi.impl.light.LightMethod
+import com.intellij.util.IncorrectOperationException
 import org.jetbrains.kotlin.asJava.classes.KtLightClass
 import org.jetbrains.kotlin.asJava.classes.LightClassInheritanceHelper
 import org.jetbrains.kotlin.asJava.elements.KtLightElement
@@ -38,7 +39,7 @@ import org.jetbrains.kotlin.resolve.DescriptorUtils
 class KtFakeLightClass(override val kotlinOrigin: KtClassOrObject) :
     AbstractLightClass(kotlinOrigin.manager, KotlinLanguage.INSTANCE),
     KtLightClass {
-    private val _delegate by lazy { PsiElementFactory.SERVICE.getInstance(kotlinOrigin.project).createClass("dummy") }
+    private val _delegate by lazy { DummyJavaPsiFactory(kotlinOrigin.project).createDummyClass() }
     private val _containingClass by lazy { kotlinOrigin.containingClassOrObject?.let { KtFakeLightClass(it) } }
 
     override val clsDelegate get() = _delegate
@@ -74,7 +75,7 @@ class KtFakeLightMethod private constructor(
     ktClassOrObject: KtClassOrObject
 ) : LightMethod(
     ktDeclaration.manager,
-    PsiElementFactory.SERVICE.getInstance(ktDeclaration.project).createMethod("dummy", PsiType.VOID),
+    DummyJavaPsiFactory(ktDeclaration.project).createDummyVoidMethod(),
     KtFakeLightClass(ktClassOrObject),
     KotlinLanguage.INSTANCE
 ), KtLightElement<KtNamedDeclaration, PsiMethod> {
@@ -93,4 +94,27 @@ class KtFakeLightMethod private constructor(
             return KtFakeLightMethod(ktDeclaration, ktClassOrObject)
         }
     }
+}
+
+class DummyJavaPsiFactory(project: Project): PsiElementFactoryImpl(PsiManagerEx.getInstanceEx(project)) {
+    fun createDummyVoidMethod(): PsiMethod {
+        val name = "dummy"
+        val returnType = PsiType.VOID
+
+        val canonicalText = GenericsUtil.getVariableTypeByExpressionType(returnType).getCanonicalText(true)
+        val aFile = createDummyJavaFile("class _Dummy_ { public $canonicalText $name() {\n} }")
+        val classes = aFile.classes
+        if (classes.isEmpty()) {
+            throw IncorrectOperationException("Class was not created. Method name: $name; return type: $canonicalText")
+        }
+        val methods = classes[0].methods
+        if (methods.isEmpty()) {
+            throw IncorrectOperationException("Method was not created. Method name: $name; return type: $canonicalText")
+        }
+        val method = methods[0]
+
+        return method as PsiMethod
+    }
+
+    fun createDummyClass() = createClass("dummy")
 }
