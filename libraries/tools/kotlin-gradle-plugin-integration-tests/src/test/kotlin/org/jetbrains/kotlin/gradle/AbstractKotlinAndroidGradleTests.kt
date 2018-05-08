@@ -298,6 +298,9 @@ fun getSomething() = 10
             assertFileExists("libAndroid/build/tmp/kotlin-classes/release/foo/PlatformClass.class")
             assertFileExists("libAndroid/build/tmp/kotlin-classes/debugUnitTest/foo/PlatformTest.class")
             assertFileExists("libAndroid/build/tmp/kotlin-classes/debugUnitTest/foo/PlatformTest.class")
+
+            // Check that the common module is not added to the deprecated configuration 'compile' (KT-23719):
+            assertNotContains("Configuration 'compile' is obsolete and has been replaced with 'implementation'")
         }
     }
 }
